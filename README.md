@@ -2,6 +2,8 @@
 
 This project aims at providing a simple UI to control a scanner.
 
+![Screenshot](/screenshots/screenshot1.jpg)
+
 It currently offers two features:
 
 * displaying a preview from the scanner
