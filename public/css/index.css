@@ -1,8 +1,8 @@
 body {
     text-align: center;
 }
-#col-preview img {
-    height: 100%;
+.container {
+    margin-top: 1%;
 }
 .row {
     border: 1px solid lightgray;
@@ -14,21 +14,18 @@ body {
 #col-controls {
     border-left: 1px solid lightgray;
 }
-.container {
-    margin-top: 1%;
-}
-.btn {
-    width: 100%;
-}
 #preview {
     padding-bottom: 7%;
-}
-#scan select {
-    margin-bottom: 3%;
 }
 .err {
     color: red;
 }
+.btn {
+    width: 100%;
+}
 #scan button {
+    margin-bottom: 3%;
+}
+#scan select {
     margin-bottom: 3%;
 }
