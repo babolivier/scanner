@@ -7,6 +7,7 @@ import (
 	"image/jpeg"
 	"io"
 
+	"github.com/sirupsen/logrus"
 	"github.com/tjgq/sane"
 
 	"github.com/babolivier/scanner/config"
@@ -35,15 +36,26 @@ func NewScanner(cfg *config.ScannerConfig, client *webdav.Client) (s *Scanner, e
 		webDAVClient: client,
 	}
 
-	if s.conn, err = sane.Open(cfg.DeviceName); err != nil {
-		return nil, err
+	// Try to open a connection with the device.
+	if err = s.openConn(); err != nil {
+		// If that didn't work, we'll try again when trying to get an image.
+		logrus.WithError(err).Warn("Failed to connect to the device")
 	}
 
-	if _, err = s.conn.SetOption("mode", cfg.Mode); err != nil {
-		return nil, err
+	return s, nil
+}
+
+// openConn opens a SANE connection to the scanning device and sets the mode.
+func (s *Scanner) openConn() (err error) {
+	if s.conn, err = sane.Open(s.cfg.DeviceName); err != nil {
+		return err
 	}
 
-	return
+	if _, err = s.conn.SetOption("mode", s.cfg.Mode); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Preview triggers a low-resolution scan on the scanning device and returns the
@@ -87,6 +99,14 @@ func (s *Scanner) ScanAndUpload(format string) (fileName string, err error) {
 
 // getImage triggers a scan with the provided resolution on the scanning device.
 func (s *Scanner) getImage(resolution int) (*sane.Image, error) {
+	// If the SANE connection hasn't already been established, try to do it now.
+	if s.conn == nil {
+		if err := s.openConn(); err != nil {
+			// If that didn't work, return the error, and try again next time.
+			return nil, err
+		}
+	}
+
 	if _, err := s.conn.SetOption("resolution", resolution); err != nil {
 		return nil, err
 	}
