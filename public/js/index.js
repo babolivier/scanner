@@ -32,27 +32,19 @@ function getPreview() {
     fetch("/preview.jpg")
         .then(response => {
             if (response.status === 200) {
-                response.text().then(text => {
-                    if (text === offlineMsg) {
-                        // If the text from the response is the one sent by the service
-                        // worker when the app is offline, show a user-readable error.
-                        showErr();
-                    } else {
-                        // Otherwise, if the request was a success, turn the image bytes
-                        // into a data URL.
-                        response.blob()
-                            .then(dataURLForBlob)
-                            .then(dataURL => {
-                                // Hide the spinner and allow clicking the button again.
-                                spinner.classList.add("d-none");
-                                btn.disabled = false;
-                                // Set the data URL as the source of the img element, and
-                                // show it.
-                                img.setAttribute("src", dataURL);
-                                img.classList.remove("d-none");
-                            })
-                    }
-                })
+                // Otherwise, if the request was a success, turn the image bytes
+                // into a data URL.
+                response.blob()
+                    .then(dataURLForBlob)
+                    .then(dataURL => {
+                        // Hide the spinner and allow clicking the button again.
+                        spinner.classList.add("d-none");
+                        btn.disabled = false;
+                        // Set the data URL as the source of the img element, and
+                        // show it.
+                        img.setAttribute("src", dataURL);
+                        img.classList.remove("d-none");
+                    })
             } else {
                 // Show an user-readable error and log what actually went wrong.
                 showErr();
