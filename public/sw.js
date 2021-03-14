@@ -19,36 +19,7 @@ self.addEventListener("install", event => {
     )
 });
 
-// Implement support for a very basic offline mode.
-self.addEventListener("fetch", event => {
-    const url = new URL(event.request.url)
-
-    event.respondWith(
-        new Promise((resolve, reject) => {
-            if (url.pathname.endsWith("preview.jpg") || url.pathname.endsWith("scan")) {
-                // Never cache results from the server's endpoints as these are expected
-                // to change for each request.
-                resolve(fetch(event.request))
-            }
-
-            // Otherwise, try to fetch the resouce from the cache, or from the network if
-            // the cache yielded no result.
-            caches.match(event.request)
-                .then(response => {
-                    if (response) {
-                        resolve(response);
-                    }
-                    resolve(fetch(event.request));
-                }).catch((err) => {
-                    console.log(1)
-                    console.log(event.request.url)
-                    return caches.match("misc/offline-msg.txt");
-                });
-        }).catch(() => {
-            console.log(2)
-            console.log(event.request.url)
-            // Serve a basic string to tell the app we're offline.
-            return caches.match("misc/offline-msg.txt")
-        })
-    )
-});
+// Implement a stub listener for fetch events to make the PWA installable.
+// TODO: This will not work with Chrome 93 and later, but setting up an offline mode that
+//  doesn't duplicate requests seems non-trivial so let's postpone that for later.
+self.addEventListener("fetch", () => {});
