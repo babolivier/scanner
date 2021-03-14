@@ -39,7 +39,10 @@ func NewScanner(cfg *config.ScannerConfig, client *webdav.Client) (s *Scanner, e
 	// Try to open a connection with the device.
 	if err = s.openConn(); err != nil {
 		// If that didn't work, we'll try again when trying to get an image.
-		logrus.WithError(err).Warn("Failed to connect to the device")
+		logrus.
+			WithField("name", s.cfg.DeviceName).
+			WithError(err).
+			Warn("Failed to connect to device")
 	}
 
 	return s, nil
@@ -55,7 +58,7 @@ func (s *Scanner) openConn() (err error) {
 		return err
 	}
 
-	logrus.WithField("name", s.cfg.DeviceName).Info("Connected to the device")
+	logrus.WithField("name", s.cfg.DeviceName).Info("Connected to device")
 
 	return nil
 }
