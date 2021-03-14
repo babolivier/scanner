@@ -27,6 +27,8 @@ type ScannerConfig struct {
 type HTTPConfig struct {
 	Address string `yaml:"bind_addr"`
 	Port    string `yaml:"bind_port"`
+	TLSCert string `yaml:"tls_cert"`
+	TLSKey  string `yaml:"tls_key"`
 }
 
 // WebDAVConfig represents the configuration required to connect to the WebDAV server and

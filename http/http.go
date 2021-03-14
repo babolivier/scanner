@@ -108,7 +108,14 @@ func ListenAndServe(cfg *config.HTTPConfig, s *scanner.Scanner) error {
 	http.HandleFunc("/preview.jpg", handlers.handlePreview)
 	http.HandleFunc("/scan", handlers.handleScan)
 
-	// Start the HTTP server.
+	// Figure out which address to listen on.
 	addr := fmt.Sprintf("%s:%s", cfg.Address, cfg.Port)
-	return http.ListenAndServe(addr, nil)
+
+	// If TLS credentials have been provided, start a HTTPS server, otherwise start a
+	// plain text HTTP server.
+	if cfg.TLSCert != "" && cfg.TLSKey != "" {
+		return http.ListenAndServeTLS(addr, cfg.TLSCert, cfg.TLSKey, nil)
+	} else {
+		return http.ListenAndServe(addr, nil)
+	}
 }
