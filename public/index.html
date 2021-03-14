@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Scanner</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/index.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div id="col-preview" class="col-sm-8">
+                <p id="preview-tip">Cliquer sur "Aperçu" pour afficher un aperçu</p>
+                <div id="preview-spinner" class="spinner-border d-none" role="status"></div>
+                <img id="preview-img" class="img-fluid d-none" alt="Aperçu"/>
+                <p id="preview-err" class="err d-none">Le scanner n'est pas disponible</p>
+            </div>
+            <div id="col-controls" class="col-sm controls">
+                <div id="preview">
+                    <button type="submit" class="btn btn-primary">Aperçu</button>
+                </div>
+                <div id="scan">
+                    <select class="form-select">
+                        <option value="default" selected>Format</option>
+                        <option value="jpeg">JPEG</option>
+                        <option value="pdf">PDF</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">Scanner</button>
+                    <div id="scan-spinner" class="spinner-border d-none" role="status"></div>
+                    <p id="scan-format-err" class="err d-none">Sélectionner un format</p>
+                    <p id="scan-err" class="err d-none">Le scanner n'est pas disponible</p>
+                    <p id="scan-success" class="d-none">Numérisation sauvegardée sous <span id="scan-filename"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script src="js/index.js"></script>
+</body>
+</html>

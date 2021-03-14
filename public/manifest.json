@@ -1,0 +1,17 @@
+{
+  "name": "Scanner",
+  "short_name": "Scanner",
+  "start_url": "/",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "description": "Scanner un document",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    {
+      "src": "/img/icon-200-200.png",
+      "sizes": "200x200",
+      "type": "image/png"
+    }
+  ]
+}
