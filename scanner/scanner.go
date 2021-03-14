@@ -55,18 +55,24 @@ func (s *Scanner) openConn() (err error) {
 		return err
 	}
 
+	logrus.WithField("name", s.cfg.DeviceName).Info("Connected to the device")
+
 	return nil
 }
 
 // Preview triggers a low-resolution scan on the scanning device and returns the
 // resulting image.
 func (s *Scanner) Preview() (*sane.Image, error) {
+	logrus.Info("Getting preview")
+
 	return s.getImage(s.cfg.PreviewRes)
 }
 
 // ScanAndUpload triggers a high-resolution scan on the scanning device and uploads the
 // resulting image to the WebDAV server.
 func (s *Scanner) ScanAndUpload(format string) (fileName string, err error) {
+	logrus.WithField("format", format).Info("Triggering scan")
+
 	// Select the encoding function to run the resulting image through, and at the same
 	// time make sure the format is a supported one. We do this early because the scan
 	// can take some time to complete, and we don't want to wait that long to tell the
@@ -99,6 +105,8 @@ func (s *Scanner) ScanAndUpload(format string) (fileName string, err error) {
 
 // getImage triggers a scan with the provided resolution on the scanning device.
 func (s *Scanner) getImage(resolution int) (*sane.Image, error) {
+	logrus.WithField("resolution", resolution).Info("Reading image")
+
 	// If the SANE connection hasn't already been established, try to do it now.
 	if s.conn == nil {
 		if err := s.openConn(); err != nil {

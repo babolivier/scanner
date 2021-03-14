@@ -8,6 +8,8 @@ import (
 	"path"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/babolivier/scanner/config"
 )
 
@@ -35,6 +37,10 @@ func (c *Client) Upload(body *bytes.Buffer, fileType string) (string, error) {
 		fileType,
 	)
 
+	logrus.
+		WithField("filename", fileName).
+		Info("Uploading file to the WebDAV server")
+
 	// Parse the root URL. Ideally we'd do this in NewClient, but we need to change the
 	// path of this URL with the file's name, and we don't want this change to persist
 	// on the client.
@@ -60,6 +66,8 @@ func (c *Client) Upload(body *bytes.Buffer, fileType string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	logrus.WithField("status_code", resp.StatusCode).Info("Upload finished")
 
 	// According to RFC4918, the creation of a resource must be indicated by use of a
 	// 201 Created response code, so return an error if that's not what we got back.

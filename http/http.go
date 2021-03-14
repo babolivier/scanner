@@ -80,6 +80,10 @@ func (h *handlers) handleScan(w http.ResponseWriter, req *http.Request) {
 	// the WebDAV server.
 	fileName, err := h.scanner.ScanAndUpload(format)
 	if err != nil {
+		logrus.
+			WithError(err).
+			Error("Failed to scan or to upload to the WebDAV server")
+
 		if err == scanner.ErrUnsupportedFormat {
 			http.Error(w, "Unsupported format", http.StatusBadRequest)
 		} else {
@@ -97,7 +101,7 @@ func (h *handlers) handleScan(w http.ResponseWriter, req *http.Request) {
 
 // ListenAndServe registers the HTTP handlers and starts the HTTP server.
 func ListenAndServe(cfg *config.HTTPConfig, s *scanner.Scanner) error {
-	handlers := &handlers{
+	h := &handlers{
 		scanner: s,
 	}
 
@@ -105,15 +109,21 @@ func ListenAndServe(cfg *config.HTTPConfig, s *scanner.Scanner) error {
 	fs := http.FileServer(http.Dir("./public"))
 	http.Handle("/", fs)
 	// Register the handlers to preview and scan documents.
-	http.HandleFunc("/preview.jpg", handlers.handlePreview)
-	http.HandleFunc("/scan", handlers.handleScan)
+	http.HandleFunc("/preview.jpg", h.handlePreview)
+	http.HandleFunc("/scan", h.handleScan)
 
-	// Figure out which address to listen on.
+	// Figure out which address to listen on, and whether to enable TLS.
 	addr := fmt.Sprintf("%s:%s", cfg.Address, cfg.Port)
+	useTLS := cfg.TLSCert != "" && cfg.TLSKey != ""
+
+	logrus.WithFields(logrus.Fields{
+		"address": addr,
+		"use_tls": useTLS,
+	}).Info("Started HTTP(S) server")
 
 	// If TLS credentials have been provided, start a HTTPS server, otherwise start a
 	// plain text HTTP server.
-	if cfg.TLSCert != "" && cfg.TLSKey != "" {
+	if useTLS {
 		return http.ListenAndServeTLS(addr, cfg.TLSCert, cfg.TLSKey, nil)
 	} else {
 		return http.ListenAndServe(addr, nil)
