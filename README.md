@@ -34,3 +34,7 @@ devices to retrieve it.
 This project has been built specifically for this use case. The app's UI
 is entirely in French, and some features specific to HP printers might be
 hardcoded in the code. So use it at your own risks.
+
+Note that building this project requires the libsane development headers to
+be installed on the system (which can be done  by installing the `libsane-devel`
+package on Debian-based systems).
