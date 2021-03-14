@@ -1,6 +1,6 @@
 # Scanner
 
-This project aims at providing a simple UI to control a scanner.
+This project provides a simple UI to control a scanner.
 
 ![Screenshot](/screenshots/screenshot1.jpg)
 
