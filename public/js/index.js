@@ -96,7 +96,15 @@ function scan() {
     }
 
     // Trigger the scan with the desired format.
-    const url = "/scan?format=" + format;
+    let url = "/scan?format=" + format;
+
+    // If a rectangle has been drawn on top of the preview, only scan what's in it.
+    const coords = rect.coords;
+    if (coords !== null) {
+        url += `&x=${Math.trunc(coords.x)}&y=${Math.trunc(coords.y)}`
+        url += `&width=${coords.width}&height=${coords.height}`
+    }
+
     fetch(url).
         then(response => {
             if (response.status === 200) {

@@ -69,16 +69,20 @@ func (h *handlers) handleScan(w http.ResponseWriter, req *http.Request) {
 	// Tell browsers not to cache this endpoint.
 	w.Header().Add("Cache-Control", "no-cache")
 
-	// Try to get the format for the output file (jpeg, pdf, etc.) from the URL.
-	format := req.URL.Query().Get("format")
-	if format == "" {
+	// Try to parse the URL query parameters. We don't need a catch all err != nil check
+	// because we know exactly which errors can be returned by this function.
+	options, err := scanner.NewOptionsFromQuery(req.URL.Query())
+	if err == scanner.ErrMissingFormat {
 		http.Error(w, "Missing format", http.StatusBadRequest)
+		return
+	} else if err == scanner.ErrMalformedRect {
+		http.Error(w, "Missing or malformed rect arguments", http.StatusBadRequest)
 		return
 	}
 
 	// Scan the file and upload it, and get the name of the file that's been uploaded to
 	// the WebDAV server.
-	fileName, err := h.scanner.ScanAndUpload(format)
+	fileName, err := h.scanner.ScanAndUpload(options)
 	if err != nil {
 		logrus.
 			WithError(err).

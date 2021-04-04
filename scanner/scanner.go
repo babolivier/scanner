@@ -15,6 +15,10 @@ import (
 	"github.com/babolivier/scanner/webdav"
 )
 
+const (
+	inchToMMRatio = 25.4
+)
+
 var (
 	// ErrUnsupportedFormat is the error returned by ScanAndUpload if the format isn't
 	// among the supported ones.
@@ -68,20 +72,32 @@ func (s *Scanner) openConn() (err error) {
 func (s *Scanner) Preview() (*sane.Image, error) {
 	logrus.Info("Getting preview")
 
-	return s.getImage(s.cfg.PreviewRes)
+	options := &ScanOptions{
+		resolution: s.cfg.PreviewRes,
+	}
+	return s.getImage(options)
 }
 
 // ScanAndUpload triggers a high-resolution scan on the scanning device and uploads the
 // resulting image to the WebDAV server.
-func (s *Scanner) ScanAndUpload(format string) (fileName string, err error) {
-	logrus.WithField("format", format).Info("Triggering scan")
+func (s *Scanner) ScanAndUpload(options *ScanOptions) (fileName string, err error) {
+	entry := logrus.WithField("format", options.Format)
+	if options.WithRect {
+		entry = entry.WithFields(logrus.Fields{
+			"x":      options.X,
+			"y":      options.Y,
+			"width":  options.Width,
+			"height": options.Height,
+		})
+	}
+	entry.Info("Triggering scan")
 
 	// Select the encoding function to run the resulting image through, and at the same
 	// time make sure the format is a supported one. We do this early because the scan
 	// can take some time to complete, and we don't want to wait that long to tell the
 	// requester the requested format isn't supported.
 	var encode func(w io.Writer, img image.Image, o *jpeg.Options) error
-	switch format {
+	switch options.Format {
 	case "jpeg":
 		encode = jpeg.Encode
 	case "pdf":
@@ -91,7 +107,8 @@ func (s *Scanner) ScanAndUpload(format string) (fileName string, err error) {
 	}
 
 	// Trigger the scan and get the resulting image.
-	img, err := s.getImage(s.cfg.ScanRes)
+	options.resolution = s.cfg.ScanRes
+	img, err := s.getImage(options)
 	if err != nil {
 		return
 	}
@@ -103,12 +120,15 @@ func (s *Scanner) ScanAndUpload(format string) (fileName string, err error) {
 	}
 
 	// Upload the encoded bytes to the WebDAV server.
-	return s.webDAVClient.Upload(buf, format)
+	return s.webDAVClient.Upload(buf, options.Format)
 }
 
 // getImage triggers a scan with the provided resolution on the scanning device.
-func (s *Scanner) getImage(resolution int) (*sane.Image, error) {
-	logrus.WithField("resolution", resolution).Info("Reading image")
+func (s *Scanner) getImage(options *ScanOptions) (*sane.Image, error) {
+	logrus.WithFields(logrus.Fields{
+		"resolution": options.resolution,
+		"with_rect":  options.WithRect,
+	}).Info("Reading image")
 
 	// If the SANE connection hasn't already been established, try to do it now.
 	if s.conn == nil {
@@ -118,9 +138,39 @@ func (s *Scanner) getImage(resolution int) (*sane.Image, error) {
 		}
 	}
 
-	if _, err := s.conn.SetOption("resolution", resolution); err != nil {
+	// Set the scan resolution.
+	if _, err := s.conn.SetOption("resolution", options.resolution); err != nil {
 		return nil, err
 	}
 
+	// If we're scanning a rectangle within the scanning area (and not the whole area),
+	// then set the parameters on the scanner.
+	if options.WithRect {
+		if _, err := s.conn.SetOption("l", s.pxToMM(options.X)); err != nil {
+			return nil, err
+		}
+
+		if _, err := s.conn.SetOption("t", s.pxToMM(options.Y)); err != nil {
+			return nil, err
+		}
+
+		if _, err := s.conn.SetOption("x", s.pxToMM(options.Width)); err != nil {
+			return nil, err
+		}
+
+		if _, err := s.conn.SetOption("y", s.pxToMM(options.Height)); err != nil {
+			return nil, err
+		}
+	} else {
+		// TODO: reset the options at their default values
+	}
+
 	return s.conn.ReadImage()
+}
+
+// pxToMM calculates a value in millimeters from the given value in pixels. The preview
+// resolution (in DPI) is used because the value in pixels is expected to be coming from
+// a rectangle drawn on a preview.
+func (s *Scanner) pxToMM(pxValue int) float64 {
+	return float64(pxValue) * inchToMMRatio / float64(s.cfg.PreviewRes)
 }

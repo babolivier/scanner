@@ -10,15 +10,29 @@
     <link rel="icon" type="image/png" href="img/icon-200-200.png" />
 </head>
 <body>
-    <div class="container">
+    <div class="container selectDisable">
         <div class="row">
             <div id="col-preview" class="col-sm-8">
                 <p id="preview-tip">Cliquer sur "Aperçu" pour afficher un aperçu</p>
                 <div id="preview-spinner" class="spinner-border d-none" role="status"></div>
-                <img id="preview-img" class="img-fluid d-none" alt="Aperçu"/>
+                <div id="preview-rect" hidden></div>
+                <div class="preview-rect-overlay" hidden></div>
+                <div class="preview-rect-overlay" hidden></div>
+                <div class="preview-rect-overlay" hidden></div>
+                <div class="preview-rect-overlay" hidden></div>
+                <img
+                    id="preview-img"
+                    class="img-fluid d-none"
+                    alt="Aperçu"
+                    draggable="false"
+                    ondragstart="return false;"
+                />
                 <p id="preview-err" class="err d-none">Le scanner n'est pas disponible</p>
             </div>
             <div id="col-controls" class="col-sm controls">
+                <div id="preview-rect-reset" class="d-none">
+                    <button type="submit" class="btn btn-primary">Réinitialiser la sélection</button>
+                </div>
                 <div id="preview">
                     <button type="submit" class="btn btn-primary">Aperçu</button>
                 </div>
@@ -41,5 +55,6 @@
     <script src="js/bootstrap.bundle.min.js"></script>
     <script src="js/jquery-3.6.0.min.js"></script>
     <script src="js/index.js"></script>
+    <script src="js/previewrect.js"></script>
 </body>
 </html>
