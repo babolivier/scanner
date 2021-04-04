@@ -146,19 +146,19 @@ func (s *Scanner) getImage(options *ScanOptions) (*sane.Image, error) {
 	// If we're scanning a rectangle within the scanning area (and not the whole area),
 	// then set the parameters on the scanner.
 	if options.WithRect {
-		if _, err := s.conn.SetOption("l", s.pxToMM(options.X)); err != nil {
+		if _, err := s.conn.SetOption("tl-x", s.pxToMM(options.X)); err != nil {
 			return nil, err
 		}
 
-		if _, err := s.conn.SetOption("t", s.pxToMM(options.Y)); err != nil {
+		if _, err := s.conn.SetOption("tl-y", s.pxToMM(options.Y)); err != nil {
 			return nil, err
 		}
 
-		if _, err := s.conn.SetOption("x", s.pxToMM(options.Width)); err != nil {
+		if _, err := s.conn.SetOption("br-x", s.pxToMM(options.Width)); err != nil {
 			return nil, err
 		}
 
-		if _, err := s.conn.SetOption("y", s.pxToMM(options.Height)); err != nil {
+		if _, err := s.conn.SetOption("br-y", s.pxToMM(options.Height)); err != nil {
 			return nil, err
 		}
 	} else {
