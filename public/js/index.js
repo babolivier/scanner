@@ -1,6 +1,10 @@
 const offlineMsg = "Pas de connexion";
 
 function getPreview() {
+    // Reset the preview rectangle so it doesn't stay on the screen while we get the
+    // next preview.
+    rect.reset()
+
     const btn = document.querySelector("#preview button");
 
     // Don't do anything if we're already getting a preview.
