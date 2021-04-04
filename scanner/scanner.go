@@ -27,9 +27,10 @@ var (
 
 // Scanner interacts with SANE to control the scanner.
 type Scanner struct {
-	cfg          *config.ScannerConfig
-	conn         *sane.Conn
-	webDAVClient *webdav.Client
+	cfg             *config.ScannerConfig
+	conn            *sane.Conn
+	webDAVClient    *webdav.Client
+	defaultScanArea *defaultScanArea
 }
 
 // NewScanner returns a new Scanner. It also opens the SANE connection to the scanning
@@ -143,9 +144,9 @@ func (s *Scanner) getImage(options *ScanOptions) (*sane.Image, error) {
 		return nil, err
 	}
 
-	// If we're scanning a rectangle within the scanning area (and not the whole area),
-	// then set the parameters on the scanner.
 	if options.WithRect {
+		// If we're scanning a rectangle within the scanning area (and not the whole
+		// area), then set the parameters on the scanner.
 		if _, err := s.conn.SetOption("tl-x", s.pxToMM(options.X)); err != nil {
 			return nil, err
 		}
@@ -162,7 +163,11 @@ func (s *Scanner) getImage(options *ScanOptions) (*sane.Image, error) {
 			return nil, err
 		}
 	} else {
-		// TODO: reset the options at their default values
+		// Otherwise reset the options on the SANE connection to include the whole
+		// available surface.
+		if err := s.resetScanArea(); err != nil {
+			return nil, err
+		}
 	}
 
 	return s.conn.ReadImage()
