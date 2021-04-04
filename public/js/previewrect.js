@@ -99,6 +99,8 @@ class PreviewRect {
             this.overlays[1].style.top = imageCoords.minY + "px";
             this.overlays[1].style.width = previewCoords.minX - imageCoords.minX + "px";
             this.overlays[1].style.height = imageRect.height + "px";
+        } else {
+            this.overlays[1].hidden = true;
         }
 
         // Right overlay
@@ -108,6 +110,8 @@ class PreviewRect {
             this.overlays[2].style.top = imageCoords.minY + "px";
             this.overlays[2].style.width = imageCoords.maxX - previewCoords.maxX + "px";
             this.overlays[2].style.height = imageRect.height + "px";
+        } else {
+            this.overlays[2].hidden = true;
         }
 
         // Bottom overlay
@@ -117,6 +121,8 @@ class PreviewRect {
             this.overlays[3].style.top = previewCoords.minY + previewRect.height + "px";
             this.overlays[3].style.width = previewRect.width + "px";
             this.overlays[3].style.height = imageCoords.maxY - previewCoords.maxY + "px";
+        } else {
+            this.overlays[3].hidden = true;
         }
     }
 
@@ -148,11 +154,49 @@ class PreviewRect {
         this.hideOverlays();
     }
 
+    // Set the coordinates for the cursor point.
+    setCursor(x, y) {
+        this.cursor = this.correctedPoint(x, y);
+        this.draw();
+    }
+
+    // Instantiate a Point which coordinates have been corrected to fit inside the image
+    // if necessary.
+    correctedPoint(x, y) {
+        const imgRect = img.getBoundingClientRect()
+
+        if (x < imgRect.x && y < imgRect.y) {
+            return new Point(imgRect.x, imgRect.y)
+        }
+
+        if (x < imgRect.x) {
+            return new Point(imgRect.x, y)
+        }
+
+        if (y < imgRect.y) {
+            return new Point(x, imgRect.y)
+        }
+
+        if (x > imgRect.x + imgRect.width && y > imgRect.y + imgRect.height) {
+            return new Point(imgRect.x + imgRect.width, imgRect.y + imgRect.height)
+        }
+
+        if (x > imgRect.x + imgRect.width) {
+            return new Point(imgRect.x + imgRect.width, y)
+        }
+
+        if (y > imgRect.y + imgRect.height) {
+            return new Point(x, imgRect.y + imgRect.height)
+        }
+
+        return new Point(x, y)
+    }
+
     // Move the edge of the rectangle that's the closest to the provided coordinates,
     // if any.
     moveClosestEdge(x, y) {
-        const cursor = new Point(x, y)
-        let clientRect = this.el.getBoundingClientRect()
+        const cursor = this.correctedPoint(x, y)
+        const clientRect = this.el.getBoundingClientRect()
 
         // Calculate the distances between the cursor and each edge.
         const distances = {
@@ -231,46 +275,61 @@ let rect = new PreviewRect();
 
 function onMouseDown(e) {
     if (!rect.drawn) {
-        rect.origin.x = e.clientX
-        rect.origin.y = e.clientY
-    }
-}
-
-img.onmousedown = onMouseDown;
-rect.el.onmousedown = onMouseDown;
-for (const overlay of rect.overlays) {
-    overlay.onmousedown = onMouseDown;
-}
-
-function followCursor(e) {
-    // Only process onmousemove events if the left button is down.
-    // TODO: support touch screen tap events.
-    if (e.buttons === 1) {
-        // If the rectangle isn't in its initial drawing phase anymore, try to find the
-        // edge that's closest to where the cursor is and move it to the cursor's
-        // position. Otherwise, set the rectangle's diagonal.
-        if (rect.drawn) {
-            rect.moveClosestEdge(e.clientX, e.clientY)
-        } else {
-            rect.cursor.x = e.clientX
-            rect.cursor.y = e.clientY
-            rect.draw()
+        if (e.type === "mousedown") {
+            rect.origin.x = e.pageX
+            rect.origin.y = e.pageY
+        } else if (e.type === "touchstart") {
+            rect.origin.x = e.touches[0].pageX
+            rect.origin.y = e.touches[0].pageY
         }
     }
 }
 
-img.onmousemove = followCursor;
-rect.el.onmousemove = followCursor;
-for (const overlay of rect.overlays) {
-    overlay.onmousemove = followCursor;
+registerListeners("mousedown", onMouseDown)
+registerListeners("touchstart", onMouseDown)
+
+function followCursor(e) {
+    // Only process mousemove events if the left button is down.
+    if ((e.type === "mousemove" && e.buttons === 1) || e.type === "touchmove") {
+        let x, y;
+        switch (e.type) {
+            case "mousemove":
+                x = e.pageX;
+                y = e.pageY;
+                break;
+            case "touchmove":
+                x = e.touches[0].pageX
+                y = e.touches[0].pageY
+                break;
+        }
+
+        // If the rectangle isn't in its initial drawing phase anymore, try to find the
+        // edge that's closest to where the cursor is and move it to the cursor's
+        // position. Otherwise, set the rectangle's diagonal.
+        if (rect.drawn) {
+            rect.moveClosestEdge(x, y)
+        } else {
+            rect.setCursor(x, y)
+        }
+    }
 }
+
+registerListeners("mousemove", followCursor)
+registerListeners("touchmove", followCursor)
 
 function onMouseUp() {
     rect.finishInitialDrawing();
 }
 
-img.onmouseup = onMouseUp;
-rect.el.onmouseup = onMouseUp;
-for (const overlay of rect.overlays) {
-    overlay.onmouseup = onMouseUp;
+registerListeners("mouseup", onMouseUp);
+registerListeners("touchend", onMouseUp);
+
+function registerListeners(evType, fn) {
+    const property = "on" + evType;
+
+    img[property] = fn;
+    rect.el[property] = fn;
+    for (const overlay of rect.overlays) {
+        overlay[property] = fn;
+    }
 }

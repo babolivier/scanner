@@ -38,9 +38,9 @@ body {
 .preview-rect-overlay {
     background: rgba(0, 0, 0, .5);
 }
-/*#preview-rect {*/
-/*    box-shadow: 0 0 0 99999px rgba(0, 0, 0, .5);*/
-/*}*/
+#preview-img, #preview-rect, .preview-rect-overlay {
+    touch-action: none;
+}
 .selectDisable {
     -webkit-user-select: none;
     -khtml-user-select: none;
