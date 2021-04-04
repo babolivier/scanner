@@ -106,7 +106,7 @@ function scan() {
     const coords = rect.coords;
     if (coords !== null) {
         url += `&x=${Math.trunc(coords.x)}&y=${Math.trunc(coords.y)}`
-        url += `&width=${coords.width}&height=${coords.height}`
+        url += `&width=${Math.trunc(coords.width)}&height=${Math.trunc(coords.height)}`
     }
 
     fetch(url).
