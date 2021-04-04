@@ -63,6 +63,10 @@ func (s *Scanner) openConn() (err error) {
 		return err
 	}
 
+	if err = s.storeCurrentScanArea(); err != nil {
+		return err
+	}
+
 	logrus.WithField("name", s.cfg.DeviceName).Info("Connected to device")
 
 	return nil
