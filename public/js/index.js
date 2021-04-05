@@ -71,11 +71,13 @@ function scan() {
     }
 
     const formatSelect = document.querySelector("#scan select");
+    const filenameInput = document.querySelector("#scan-name-input")
     const spinner = document.querySelector("#scan-spinner");
     const scanFormatErr = document.querySelector("#scan-format-err");
+    const scanFilenameErr = document.querySelector("#scan-filename-err");
     const scanErr = document.querySelector("#scan-err");
     const scanSuccess = document.querySelector("#scan-success");
-    const scanFilename = document.querySelector("#scan-filename")
+    const scanFilename = document.querySelector("#scan-filename");
 
     // When scanning, only show the spinner, and don't allow asking for another scan
     // until the current one has completed.
@@ -100,13 +102,18 @@ function scan() {
     }
 
     // Trigger the scan with the desired format.
-    let url = "/scan?format=" + format;
+    let url = `/scan?format=${format}`;
 
     // If a rectangle has been drawn on top of the preview, only scan what's in it.
     const coords = rect.coords;
     if (coords !== null) {
-        url += `&x=${Math.trunc(coords.x)}&y=${Math.trunc(coords.y)}`
-        url += `&width=${Math.trunc(coords.width)}&height=${Math.trunc(coords.height)}`
+        url += `&x=${Math.trunc(coords.x)}&y=${Math.trunc(coords.y)}`;
+        url += `&width=${Math.trunc(coords.width)}&height=${Math.trunc(coords.height)}`;
+    }
+
+    // If a file name has been set, use it.
+    if (filenameInput.value) {
+        url += `&name=${filenameInput.value}`;
     }
 
     fetch(url).
@@ -130,6 +137,11 @@ function scan() {
                 // If the response has a 400 status code, it means the format is either
                 // missing or unsupported.
                 showElement(scanFormatErr);
+                response.text().then(console.error);
+            } else if (response.status === 409) {
+                // If the response has a 409 status code, it means the file name
+                // conflicts with an existing file.
+                showElement(scanFilenameErr);
                 response.text().then(console.error);
             } else {
                 // Otherwise, show a standard user-readable error.
@@ -157,6 +169,20 @@ function dataURLForBlob(blob){
 // Register the event handlers.
 document.querySelector("#preview button").onclick = getPreview;
 document.querySelector("#scan button").onclick = scan;
+
+// Display the file extension when setting the file's format.
+function updateFileExtension(e) {
+    const ext = document.getElementById("scan-name-extension");
+
+    if (e.target.value === "default") {
+        ext.classList.add("d-none");
+        return;
+    }
+
+    ext.classList.remove("d-none");
+    ext.innerText = "." + e.target.value;
+}
+document.querySelector("#scan select").onchange = updateFileExtension;
 
 // Register the service worker if supported by the browser.
 if ('serviceWorker' in navigator) {

@@ -42,10 +42,22 @@
                         <option value="jpeg">JPEG</option>
                         <option value="pdf">PDF</option>
                     </select>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="scan-name-label">Nom du fichier</span>
+                        <input
+                            type="text"
+                            class="form-control"
+                            aria-label="Nom du fichier"
+                            aria-describedby="scan-name-label"
+                            id="scan-name-input"
+                        />
+                        <span class="input-group-text d-none" id="scan-name-extension"></span>
+                    </div>
                     <button type="submit" class="btn btn-primary">Scanner</button>
                     <div id="scan-spinner" class="spinner-border d-none" role="status"></div>
                     <p id="scan-format-err" class="err d-none">Sélectionner un format</p>
                     <p id="scan-err" class="err d-none">Le scanner n'est pas disponible</p>
+                    <p id="scan-filename-err" class="err d-none">Un fichier existe déjà avec ce nom</p>
                     <p id="scan-success" class="d-none">Numérisation sauvegardée sous <span id="scan-filename"></span></p>
                 </div>
             </div>
