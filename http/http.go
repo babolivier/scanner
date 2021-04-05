@@ -86,7 +86,7 @@ func (h *handlers) handleScan(w http.ResponseWriter, req *http.Request) {
 
 	// If a file name has been provided, check that it's not already used by another file.
 	if options.FileName != "" {
-		exists, err := h.webdav.FileExists(options.FileName)
+		exists, err := h.webdav.FileExists(options)
 		if err != nil {
 			http.Error(w, internalErrorMsg, http.StatusInternalServerError)
 			return

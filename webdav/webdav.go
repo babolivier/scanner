@@ -64,10 +64,13 @@ func (c *Client) Upload(options *common.ScanOptions, body *bytes.Buffer) (string
 }
 
 // FileExists checks if a file already exists with the given name.
-func (c *Client) FileExists(fileName string) (bool, error) {
+func (c *Client) FileExists(options *common.ScanOptions) (bool, error) {
+	// Append the format extension to the file name.
+	fullName := fmt.Sprintf("%s.%s", options.FileName, options.Format)
+
 	// Send a HEAD request with the file name, if the server responds with a 200 status
 	// then a file with this name exists, if the status is 404 then it doesn't.
-	status, err := c.requestFile(http.MethodHead, fileName, nil)
+	status, err := c.requestFile(http.MethodHead, fullName, nil)
 	if err != nil {
 		return false, err
 	}
@@ -95,6 +98,11 @@ func (c *Client) requestFile(method string, fileName string, body io.Reader) (in
 
 	// Build a path that includes the full path for this file on the WebDAV server.
 	u.Path = path.Join(u.Path, c.cfg.UploadPath, fileName)
+
+	logrus.WithFields(logrus.Fields{
+		"url":    u,
+		"method": method,
+	}).Info("Sending WebDAV request")
 
 	// Create the request.
 	req, err := http.NewRequest(method, u.String(), body)
