@@ -2,7 +2,7 @@
 
 This project provides a simple UI to control a scanner.
 
-![Screenshot](/screenshots/screenshot1.jpg)
+![Demo](/screenshots/demo.gif)
 
 It currently offers two features:
 
