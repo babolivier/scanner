@@ -47,7 +47,7 @@ func main() {
 	defer sane.Exit()
 
 	// Start the HTTP server.
-	if err = http.ListenAndServe(cfg.HTTP, s); err != nil {
+	if err = http.ListenAndServe(cfg.HTTP, s, webDAVClient); err != nil {
 		panic(err)
 	}
 }

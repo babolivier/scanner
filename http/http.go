@@ -122,9 +122,10 @@ func (h *handlers) handleScan(w http.ResponseWriter, req *http.Request) {
 }
 
 // ListenAndServe registers the HTTP handlers and starts the HTTP server.
-func ListenAndServe(cfg *config.HTTPConfig, s *scanner.Scanner) error {
+func ListenAndServe(cfg *config.HTTPConfig, s *scanner.Scanner, c *webdav.Client) error {
 	h := &handlers{
 		scanner: s,
+		webdav:  c,
 	}
 
 	// Register a file server to serve the front end.
