@@ -1,5 +1,18 @@
 const img = document.getElementById("preview-img")
 
+// Get the rectangle for the given element absolute, i.e. relative to the whole document,
+// rather than to the viewport. We need to do this because getBoundingClientRect() returns
+// a rectangle that's relative to the viewport and therefore its coordinates change if
+// the page scrolls.
+// We only change x and y (and not top/bottom/left/right) because we only use those when
+// selecting a preview.
+function getAbsoluteRect(el) {
+    let r = el.getBoundingClientRect();
+    r.x += window.pageXOffset || document.documentElement.scrollLeft;
+    r.y += window.pageYOffset || document.documentElement.scrollTop;
+    return r;
+}
+
 // A point in the rectangle.
 class Point {
     constructor(x, y) {
@@ -33,8 +46,8 @@ class PreviewRect {
             return null
         }
 
-        const previewRect = this.el.getBoundingClientRect()
-        const imageRect = img.getBoundingClientRect()
+        const previewRect = getAbsoluteRect(this.el)
+        const imageRect = getAbsoluteRect(img)
 
         return {
             x: previewRect.x - imageRect.x,
@@ -64,8 +77,8 @@ class PreviewRect {
 
     // Draw the overlays that grey out the image where the rectangle isn't.
     drawOverlays() {
-        const imageRect = img.getBoundingClientRect();
-        const previewRect = this.el.getBoundingClientRect();
+        const imageRect = getAbsoluteRect(img);
+        const previewRect = getAbsoluteRect(this.el);
 
         const imageCoords = {
             minX: imageRect.x,
@@ -163,7 +176,7 @@ class PreviewRect {
     // Instantiate a Point which coordinates have been corrected to fit inside the image
     // if necessary.
     correctedPoint(x, y) {
-        const imgRect = img.getBoundingClientRect()
+        const imgRect = getAbsoluteRect(img);
 
         if (x < imgRect.x && y < imgRect.y) {
             return new Point(imgRect.x, imgRect.y)
@@ -196,7 +209,7 @@ class PreviewRect {
     // if any.
     moveClosestEdge(x, y) {
         const cursor = this.correctedPoint(x, y)
-        const clientRect = this.el.getBoundingClientRect()
+        const clientRect = getAbsoluteRect(this.el);
 
         // Calculate the distances between the cursor and each edge.
         const distances = {
