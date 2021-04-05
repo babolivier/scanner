@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tjgq/sane"
 
+	"github.com/babolivier/scanner/common"
 	"github.com/babolivier/scanner/config"
 	"github.com/babolivier/scanner/pdf"
 	"github.com/babolivier/scanner/webdav"
@@ -77,15 +78,15 @@ func (s *Scanner) openConn() (err error) {
 func (s *Scanner) Preview() (*sane.Image, error) {
 	logrus.Info("Getting preview")
 
-	options := &ScanOptions{
-		resolution: s.cfg.PreviewRes,
+	options := &common.ScanOptions{
+		Resolution: s.cfg.PreviewRes,
 	}
 	return s.getImage(options)
 }
 
 // ScanAndUpload triggers a high-resolution scan on the scanning device and uploads the
 // resulting image to the WebDAV server.
-func (s *Scanner) ScanAndUpload(options *ScanOptions) (fileName string, err error) {
+func (s *Scanner) ScanAndUpload(options *common.ScanOptions) (fileName string, err error) {
 	entry := logrus.WithField("format", options.Format)
 	if options.WithRect {
 		entry = entry.WithFields(logrus.Fields{
@@ -112,7 +113,7 @@ func (s *Scanner) ScanAndUpload(options *ScanOptions) (fileName string, err erro
 	}
 
 	// Trigger the scan and get the resulting image.
-	options.resolution = s.cfg.ScanRes
+	options.Resolution = s.cfg.ScanRes
 	img, err := s.getImage(options)
 	if err != nil {
 		return
@@ -125,13 +126,13 @@ func (s *Scanner) ScanAndUpload(options *ScanOptions) (fileName string, err erro
 	}
 
 	// Upload the encoded bytes to the WebDAV server.
-	return s.webDAVClient.Upload(buf, options.Format)
+	return s.webDAVClient.Upload(options, buf)
 }
 
 // getImage triggers a scan with the provided resolution on the scanning device.
-func (s *Scanner) getImage(options *ScanOptions) (*sane.Image, error) {
+func (s *Scanner) getImage(options *common.ScanOptions) (*sane.Image, error) {
 	logrus.WithFields(logrus.Fields{
-		"resolution": options.resolution,
+		"resolution": options.Resolution,
 		"with_rect":  options.WithRect,
 	}).Info("Reading image")
 
@@ -144,7 +145,7 @@ func (s *Scanner) getImage(options *ScanOptions) (*sane.Image, error) {
 	}
 
 	// Set the scan resolution.
-	if _, err := s.conn.SetOption("resolution", options.resolution); err != nil {
+	if _, err := s.conn.SetOption("resolution", options.Resolution); err != nil {
 		return nil, err
 	}
 

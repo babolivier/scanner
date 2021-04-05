@@ -1,4 +1,4 @@
-package scanner
+package common
 
 import (
 	"errors"
@@ -22,7 +22,8 @@ type ScanOptions struct {
 	Y          int
 	Width      int
 	Height     int
-	resolution int
+	FileName   string
+	Resolution int
 }
 
 // NewOptionsFromQuery instantiates a new ScanOptions and fills it with the provided
@@ -31,10 +32,12 @@ type ScanOptions struct {
 // ErrMalformedRect if a rectangle is defined in the query parameters but one of its
 // parameters is missing or malformed.
 func NewOptionsFromQuery(query url.Values) (*ScanOptions, error) {
-	options := new(ScanOptions)
+	options := &ScanOptions{
+		Format:   query.Get("format"),
+		FileName: query.Get("name"),
+	}
 
 	// Make sure a format has been provided, and return an error if not.
-	options.Format = query.Get("format")
 	if options.Format == "" {
 		return nil, ErrMissingFormat
 	}

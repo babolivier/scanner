@@ -9,8 +9,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tjgq/sane"
 
+	"github.com/babolivier/scanner/common"
 	"github.com/babolivier/scanner/config"
 	"github.com/babolivier/scanner/scanner"
+	"github.com/babolivier/scanner/webdav"
 )
 
 const (
@@ -20,6 +22,7 @@ const (
 // handlers define the HTTP handlers to serve on top of the static files.
 type handlers struct {
 	scanner *scanner.Scanner
+	webdav  *webdav.Client
 }
 
 // handlePanics recovers from a panic that occurred when processing a request, sends a
@@ -69,15 +72,30 @@ func (h *handlers) handleScan(w http.ResponseWriter, req *http.Request) {
 	// Tell browsers not to cache this endpoint.
 	w.Header().Add("Cache-Control", "no-cache")
 
-	// Try to parse the URL query parameters. We don't need a catch all err != nil check
-	// because we know exactly which errors can be returned by this function.
-	options, err := scanner.NewOptionsFromQuery(req.URL.Query())
-	if err == scanner.ErrMissingFormat {
+	// Try to parse the URL query parameters.
+	options, err := common.NewOptionsFromQuery(req.URL.Query())
+	if err == common.ErrMissingFormat {
 		http.Error(w, "Missing format", http.StatusBadRequest)
 		return
-	} else if err == scanner.ErrMalformedRect {
+	} else if err == common.ErrMalformedRect {
 		http.Error(w, "Missing or malformed rect arguments", http.StatusBadRequest)
 		return
+	} else if err != nil {
+		logrus.WithError(err).Error("Failed to parse URL query")
+	}
+
+	// If a file name has been provided, check that it's not already used by another file.
+	if options.FileName != "" {
+		exists, err := h.webdav.FileExists(options.FileName)
+		if err != nil {
+			http.Error(w, internalErrorMsg, http.StatusInternalServerError)
+			return
+		}
+
+		if exists {
+			http.Error(w, "File name already in use", http.StatusConflict)
+			return
+		}
 	}
 
 	// Scan the file and upload it, and get the name of the file that's been uploaded to
