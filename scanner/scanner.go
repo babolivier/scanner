@@ -96,6 +96,9 @@ func (s *Scanner) ScanAndUpload(options *common.ScanOptions) (fileName string, e
 			"height": options.Height,
 		})
 	}
+	if options.FileName != "" {
+		entry = entry.WithField("file_name", options.FileName)
+	}
 	entry.Info("Triggering scan")
 
 	// Select the encoding function to run the resulting image through, and at the same
