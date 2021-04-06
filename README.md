@@ -4,11 +4,6 @@ This project provides a simple UI to control a scanner.
 
 ![Demo](/screenshots/demo.gif)
 
-It currently offers two features:
-
-* displaying a preview from the scanner
-* triggering a scan and uploading the resulting file to a WebDAV server
-
 The motivation behind it is that my parents own an HP printer which can
 also scan documents. While printing over the network works pretty well,
 the only way they can _scan_ over the network is by using the proprietary
