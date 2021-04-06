@@ -84,6 +84,7 @@ function scan() {
     btn.disabled = true;
     spinner.classList.remove("d-none");
     scanFormatErr.classList.add("d-none");
+    scanFilenameErr.classList.add("d-none");
     scanErr.classList.add("d-none");
     scanSuccess.classList.add("d-none");
 
