@@ -170,6 +170,13 @@ func (s *Scanner) getImage(options *common.ScanOptions) (*sane.Image, error) {
 		if _, err := s.conn.SetOption("br-y", s.pxToMM(options.Height)); err != nil {
 			return nil, err
 		}
+
+		logrus.WithFields(logrus.Fields{
+			"x":      s.pxToMM(options.X),
+			"y":      s.pxToMM(options.Y),
+			"width":  s.pxToMM(options.Width),
+			"height": s.pxToMM(options.Height),
+		}).Info("Set scanning area")
 	} else {
 		// Otherwise reset the options on the SANE connection to include the whole
 		// available surface.
