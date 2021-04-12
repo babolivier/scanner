@@ -1,17 +1,12 @@
 package scanner
 
-// defaultScanArea stores the coordinates of the scan area as it was when the SANE
-// connection was established.
-type defaultScanArea struct {
-	TLX interface{}
-	TLY interface{}
-	BRX interface{}
-	BRY interface{}
-}
+import (
+	"github.com/babolivier/scanner/common"
+)
 
 // storeCurrentScanArea retrieves the current scan area and stores it in memory.
 func (s *Scanner) storeCurrentScanArea() (err error) {
-	s.defaultScanArea = new(defaultScanArea)
+	s.defaultScanArea = new(common.ScanArea)
 	if s.defaultScanArea.TLX, err = s.conn.GetOption("tl-x"); err != nil {
 		return err
 	}

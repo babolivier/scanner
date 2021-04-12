@@ -16,10 +16,6 @@ import (
 	"github.com/babolivier/scanner/webdav"
 )
 
-const (
-	inchToMMRatio = 25.4
-)
-
 var (
 	// ErrUnsupportedFormat is the error returned by ScanAndUpload if the format isn't
 	// among the supported ones.
@@ -31,7 +27,7 @@ type Scanner struct {
 	cfg             *config.ScannerConfig
 	conn            *sane.Conn
 	webDAVClient    *webdav.Client
-	defaultScanArea *defaultScanArea
+	defaultScanArea *common.ScanArea
 }
 
 // NewScanner returns a new Scanner. It also opens the SANE connection to the scanning
@@ -88,12 +84,12 @@ func (s *Scanner) Preview() (*sane.Image, error) {
 // resulting image to the WebDAV server.
 func (s *Scanner) ScanAndUpload(options *common.ScanOptions) (fileName string, err error) {
 	entry := logrus.WithField("format", options.Format)
-	if options.WithRect {
+	if options.ScanArea != nil {
 		entry = entry.WithFields(logrus.Fields{
-			"x":      options.X,
-			"y":      options.Y,
-			"width":  options.Width,
-			"height": options.Height,
+			"tlx_px": options.ScanArea.TLX,
+			"tly_px": options.ScanArea.TLY,
+			"brx_px": options.ScanArea.BRX,
+			"bry_px": options.ScanArea.BRY,
 		})
 	}
 	if options.FileName != "" {
@@ -136,7 +132,7 @@ func (s *Scanner) ScanAndUpload(options *common.ScanOptions) (fileName string, e
 func (s *Scanner) getImage(options *common.ScanOptions) (*sane.Image, error) {
 	logrus.WithFields(logrus.Fields{
 		"resolution": options.Resolution,
-		"with_rect":  options.WithRect,
+		"with_rect":  options.ScanArea != nil,
 	}).Info("Reading image")
 
 	// If the SANE connection hasn't already been established, try to do it now.
@@ -152,30 +148,35 @@ func (s *Scanner) getImage(options *common.ScanOptions) (*sane.Image, error) {
 		return nil, err
 	}
 
-	if options.WithRect {
+	if options.ScanArea != nil {
+		// Convert the values of the scan area from pixels to millimeters. We use the
+		// resolution for previews in these calculations because we expect the coordinates
+		// to be coming from a rectangle drawn on a preview.
+		mmArea := options.ScanArea.PixelsToMillimeters(s.cfg.PreviewRes)
+
 		// If we're scanning a rectangle within the scanning area (and not the whole
 		// area), then set the parameters on the scanner.
-		if _, err := s.conn.SetOption("tl-x", s.pxToMM(options.X)); err != nil {
+		if _, err := s.conn.SetOption("tl-x", mmArea.TLX); err != nil {
 			return nil, err
 		}
 
-		if _, err := s.conn.SetOption("tl-y", s.pxToMM(options.Y)); err != nil {
+		if _, err := s.conn.SetOption("tl-y", mmArea.TLY); err != nil {
 			return nil, err
 		}
 
-		if _, err := s.conn.SetOption("br-x", s.pxToMM(options.Width)); err != nil {
+		if _, err := s.conn.SetOption("br-x", mmArea.BRX); err != nil {
 			return nil, err
 		}
 
-		if _, err := s.conn.SetOption("br-y", s.pxToMM(options.Height)); err != nil {
+		if _, err := s.conn.SetOption("br-y", mmArea.BRY); err != nil {
 			return nil, err
 		}
 
 		logrus.WithFields(logrus.Fields{
-			"x":      s.pxToMM(options.X),
-			"y":      s.pxToMM(options.Y),
-			"width":  s.pxToMM(options.Width),
-			"height": s.pxToMM(options.Height),
+			"tlx_mm": mmArea.TLX,
+			"tly_mm": mmArea.TLY,
+			"brx_mm": mmArea.BRX,
+			"bry_mm": mmArea.BRY,
 		}).Info("Set scanning area")
 	} else {
 		// Otherwise reset the options on the SANE connection to include the whole
@@ -186,11 +187,4 @@ func (s *Scanner) getImage(options *common.ScanOptions) (*sane.Image, error) {
 	}
 
 	return s.conn.ReadImage()
-}
-
-// pxToMM calculates a value in millimeters from the given value in pixels. The preview
-// resolution (in DPI) is used because the value in pixels is expected to be coming from
-// a rectangle drawn on a preview.
-func (s *Scanner) pxToMM(pxValue int) float64 {
-	return float64(pxValue) * inchToMMRatio / float64(s.cfg.PreviewRes)
 }

@@ -17,11 +17,7 @@ var (
 // result.
 type ScanOptions struct {
 	Format     string
-	WithRect   bool
-	X          int
-	Y          int
-	Width      int
-	Height     int
+	ScanArea   *ScanArea
 	FileName   string
 	Resolution int
 }
@@ -44,18 +40,18 @@ func NewOptionsFromQuery(query url.Values) (*ScanOptions, error) {
 
 	x := query.Get("x")
 	y := query.Get("y")
-	width := query.Get("width")
-	height := query.Get("height")
+	rawWidth := query.Get("width")
+	rawHeight := query.Get("height")
 
 	// Don't do anything more if no rectangle was provided.
-	if x == "" && y == "" && width == "" && height == "" {
+	if x == "" && y == "" && rawWidth == "" && rawHeight == "" {
 		return options, nil
 	}
 
-	options.WithRect = true
+	options.ScanArea = new(ScanArea)
 
 	// Check if any of the rectangle parameters is missing.
-	if x == "" || y == "" || width == "" || height == "" {
+	if x == "" || y == "" || rawWidth == "" || rawHeight == "" {
 		return nil, ErrMalformedRect
 	}
 
@@ -63,7 +59,7 @@ func NewOptionsFromQuery(query url.Values) (*ScanOptions, error) {
 	// probably deal with them just as well if they're strings, but this at least
 	// provides an extra layer of input validation
 	var err error
-	if options.X, err = strconv.Atoi(x); err != nil {
+	if options.ScanArea.TLX, err = strconv.Atoi(x); err != nil {
 		logrus.
 			WithError(err).
 			Error("Failed to parse x value for rectangle")
@@ -71,7 +67,7 @@ func NewOptionsFromQuery(query url.Values) (*ScanOptions, error) {
 		return nil, ErrMalformedRect
 	}
 
-	if options.Y, err = strconv.Atoi(y); err != nil {
+	if options.ScanArea.TLY, err = strconv.Atoi(y); err != nil {
 		logrus.
 			WithError(err).
 			Error("Failed to parse y value for rectangle")
@@ -79,7 +75,8 @@ func NewOptionsFromQuery(query url.Values) (*ScanOptions, error) {
 		return nil, ErrMalformedRect
 	}
 
-	if options.Width, err = strconv.Atoi(width); err != nil {
+	var width, height int
+	if width, err = strconv.Atoi(rawWidth); err != nil {
 		logrus.
 			WithError(err).
 			Error("Failed to parse width value for rectangle")
@@ -87,13 +84,16 @@ func NewOptionsFromQuery(query url.Values) (*ScanOptions, error) {
 		return nil, ErrMalformedRect
 	}
 
-	if options.Height, err = strconv.Atoi(height); err != nil {
+	if height, err = strconv.Atoi(rawHeight); err != nil {
 		logrus.
 			WithError(err).
 			Error("Failed to parse height value for rectangle")
 
 		return nil, ErrMalformedRect
 	}
+
+	options.ScanArea.BRX = options.ScanArea.TLX.(int) + width
+	options.ScanArea.BRY = options.ScanArea.TLY.(int) + height
 
 	return options, nil
 }
