@@ -16,10 +16,10 @@ home, and they want to get rid of their 15-year-old desktop computer, which
 main use nowadays is for scanning documents, I figured I'd write a simple
 app they can use to trigger scans.
 
-The project comes in two parts, a PWA (progressive web app) and a server.
-The PWA lives on my parents' devices and interacts with the server when
-they want to preview or scan a document. The server runs on a Raspberry Pi
-4, which is connected to the printer via USB, and interacts with it using
+The project comes in two parts, a web application and a server. The web app
+is served to my parents' devices and interacts with the server when they
+want to preview or scan a document. The server runs on a Raspberry Pi 4,
+which is connected to the printer via USB, and interacts with it using
 [SANE](http://www.sane-project.org/).
 
 Once a scan is complete, the resulting file is uploaded to my Nextcloud
