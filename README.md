@@ -8,7 +8,7 @@ The motivation behind it is that my parents own an HP printer which can
 also scan documents. While printing over the network works pretty well,
 the only way they can _scan_ over the network is by using the proprietary
 HP app, which is non-free, annoying to use and _requires_ the creation of
-an account on their platform to interact using your _own_ printer on your
+an account on their servers to interact with your _own_ printer on your
 own network.
 
 Given my parents are mostly using their tablets and smartphones while at
